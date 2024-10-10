@@ -27,39 +27,59 @@ def extract_additional_info(product_url):
     return color
   return None
 
+def validate_data(product):
+  # removing whitespaces from name and color (string fields)
+  product['name'] = product['name'].strip() if product['name'] else None
+  product['color'] = product['color'].strip() if product['color'] else None
+
+  if product['price']:
+    # removing the currency (euro) string
+    product['price'] = re.sub(r'[^\d.]', '', product['price']).strip()
+    try:
+      product['price'] = float(product['price'])
+    except ValueError:
+      product['price'] = None
+
+  if product['kilometrage']:
+    # removing "km" string
+    product['kilometrage'] = re.sub(r'[^\d.]', '', product['kilometrage']).strip()
+    try:
+      product['kilometrage'] = int(product['kilometrage'])
+    except ValueError:
+      product['kilometrage'] = None
+    
+  return product
+
 def extract_product_info(soup, limit=10):
   products = []
   product_elements = soup.select('li.ads-list-photo-item')
 
   for element in product_elements[:limit]:
     name_element = element.select_one('div.ads-list-photo-item-title a')
-    name = name_element.text.strip() if name_element else None
+    name = name_element.text if name_element else None
     
     price_element = element.select_one('span.ads-list-photo-item-price-wrapper')
-    if price_element:
-      price_text = price_element.text.strip()
-      # removing all non-numeric characters
-      price = re.sub(r'[^\d.]', '', price_text)
-      price = int(price) if price else None
-    else:
-      price = None
+    price = price_element.text if price_element else None
 
     link_element = element.select_one('div.ads-list-photo-item-title a')
     link = 'https://999.md' + link_element['href'] if link_element else None
 
     kilometrage_element = element.select_one('div.is-offer-type span')
-    kilometrage = kilometrage_element.text.strip() if kilometrage_element else None
+    kilometrage = kilometrage_element.text if kilometrage_element else None
 
     color = extract_additional_info(link) if link else None
 
-    products.append({
+    product = {
       'name': name,
       'price': price,
       'link': link,
       'kilometrage': kilometrage,
       'color': color
-    })
+    }
   
+    validated_product = validate_data(product)
+    products.append(validated_product)
+
   return products
 
 response = fetch_page(url)
