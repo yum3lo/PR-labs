@@ -1,4 +1,5 @@
-import requests
+import socket
+import ssl
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
@@ -7,24 +8,64 @@ from functools import reduce
 url = 'https://999.md/ro/list/transport/cars'
 eur_to_mdl = 19.286
 
-def fetch_page(url):
-  try:
-    headers = {
-      # mimics a real browser request
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-    }
-    response = requests.get(url, headers=headers)
-    # if the response was not successful, raises an http error
-    response.raise_for_status()
-    return response
-  except requests.RequestException as e:
-    print(f'Request failed: {e}')
-    return None
+# because of 301 Moved Permanently redirect, redirect following is needed, HTTP to HTTPS, SSL for secure connection
+def fetch_page_socket(url, max_redirects=5): # no infinite loops
+  for _ in range(max_redirects):
+    try:
+      parts = url.split('/')
+      if len(parts) >= 3:
+        protocol, _, host = parts[:3]
+        path = '/' + '/'.join(parts[3:])
+      else:
+        raise ValueError('Invalid URL format')
+      
+      context = ssl.create_default_context()
+      with socket.create_connection((host, 443)) as sock:
+        with context.wrap_socket(sock, server_hostname=host) as secure_sock:
+          # encode the request to bytes
+          # close server after sending the response
+          # \r\n\r\n - end of the headers
+          secure_sock.sendall(f"GET {path} HTTP/1.1\r\nHost: {host}\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\r\nConnection: close\r\n\r\n".encode())
+          response = b""
+          while True:
+            data = secure_sock.recv(4096)
+            if not data:
+              break
+            response += data
+
+      # # AF_INET = IPv4, SOCK_STREAM = TCP
+      # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      # s.connect((host, 80))
+
+      # split the response into headers and body
+      headers, _, body = response.partition(b'\r\n\r\n')
+      # decodes the headers from bytes to string
+      headers = headers.decode('utf-8')
+
+      # check if the response is a redirect
+      if 'HTTP/1.1 301' in headers or 'HTTP/1.1 302' in headers:
+        location = re.search(r'Location: (.*)\r\n', headers)
+        if location:
+          # get the new url
+          url = location.group(1)
+          if not url.startswith('http'):
+            url = f'{protocol}//{host}{url}'
+          print(f'Redirecting to: {url}')
+          continue
+      
+      return body.decode('utf-8')
+
+    except Exception as e:
+      print(f'Request failed: {e}')
+      return None
+
+  print("Max redirects reached")
+  return None
 
 def extract_additional_info(product_url):
-  response = fetch_page(product_url)
-  if response:
-    soup = BeautifulSoup(response.content, 'html.parser')
+  html_content = fetch_page_socket(product_url)
+  if html_content:
+    soup = BeautifulSoup(html_content, 'html.parser')
     color_element = soup.select_one('li.m-value[itemprop="additionalProperty"] span.adPage__content__features__key:-soup-contains("Culoarea") + span.adPage__content__features__value')
     color = color_element.text.strip() if color_element else None
     return color
@@ -95,17 +136,16 @@ def process_products(products):
   # final data structure
   result = {
     'products_filtered': products_filtered,
-    'total_price_eur': total_price,
     'total_price_mdl': total_price * eur_to_mdl,
     'timestamp': datetime.now().isoformat()
   }
   return result
 
-response = fetch_page(url)
+html_content = fetch_page_socket(url)
 
-if response:
+if html_content:
   print(f'Successfully fetched page: {url}')
-  soup = BeautifulSoup(response.content, 'html.parser')
+  soup = BeautifulSoup(html_content, 'html.parser')
   products = extract_product_info(soup)
   # process the products
   processed_data = process_products(products)
