@@ -1,8 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from datetime import datetime
+from functools import reduce
 
 url = 'https://999.md/ro/list/transport/cars'
+eur_to_mdl = 19.286
 
 def fetch_page(url):
   try:
@@ -50,11 +53,11 @@ def validate_data(product):
     
   return product
 
-def extract_product_info(soup, limit=10):
+def extract_product_info(soup):
   products = []
   product_elements = soup.select('li.ads-list-photo-item')
 
-  for element in product_elements[:limit]:
+  for element in product_elements:
     name_element = element.select_one('div.ads-list-photo-item-title a')
     name = name_element.text if name_element else None
     
@@ -82,20 +85,41 @@ def extract_product_info(soup, limit=10):
 
   return products
 
+def process_products(products):
+  # convert eur to mdl
+  products_mdl = list(map(lambda p: {**p, 'price_mdl': p['price'] * eur_to_mdl if p['price'] else None}, products))
+  # filter products by price
+  products_filtered = list(filter(lambda p: p['price'] and 5000<= p['price'] <= 10000, products_mdl))
+  # sum up the prices
+  total_price = reduce(lambda acc, p: acc + (p['price'] or 0), products_filtered, 0)
+  # final data structure
+  result = {
+    'products_filtered': products_filtered,
+    'total_price_eur': total_price,
+    'total_price_mdl': total_price * eur_to_mdl,
+    'timestamp': datetime.now().isoformat()
+  }
+  return result
+
 response = fetch_page(url)
 
 if response:
   print(f'Successfully fetched page: {url}')
   soup = BeautifulSoup(response.content, 'html.parser')
   products = extract_product_info(soup)
-  for product in products:
+  # process the products
+  processed_data = process_products(products)
+  print("Filtered products:")
+  for product in processed_data['products_filtered']:
     print(f"Name: {product['name']}")
-    print(f"Price: {product['price']}")
+    print(f"Price (MDL): {product['price_mdl']}")
     print(f"Link: {product['link']}")
     print(f"Kilometrage: {product['kilometrage']}")
     print(f"Color: {product['color']}")
     print('-----------------------------------')
 
-  print(f"Found {len(products)} products")
+  print(f"Found {len(processed_data['products_filtered'])} products")
+  print(f"Total price (MDL): {processed_data['total_price_mdl']}")
+  print(f"Timestamp: {processed_data['timestamp']}")
 else:
   print(f'Failed to fetch page: {url}')
