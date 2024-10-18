@@ -6,6 +6,7 @@ from datetime import datetime
 from functools import reduce
 from json_serializer import to_json
 from xml_serializer import to_xml
+from compact_serializer import CompactSerialize
 
 url = 'https://999.md/ro/list/transport/cars'
 eur_to_mdl = 19.286
@@ -173,3 +174,9 @@ if processed_data:
   print(json_data)
   print("\nXML Data:")
   print(xml_data)
+  compact_output = CompactSerialize.serialize(processed_data)
+  print("\nCompact Data:")
+  print(compact_output)
+
+  deserialize_data = CompactSerialize.deserialize(compact_output)
+  print("\nDeserialized data mathes original:", processed_data == deserialize_data)

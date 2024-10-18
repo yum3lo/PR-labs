@@ -1,11 +1,11 @@
 def escape_json_string(s):
-  """Escape special characters in a string for JSON."""
+  # escape special characters in a string
   return s.replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
 
 def to_json(data):
-  """Convert data to JSON string."""
+  # converting data to JSON string
   if isinstance(data, dict):
-    return '{' + ','.join(f'"{k}":{to_json(v)}' for k, v in data.items()) + '}'
+    return '{' + ','.join(f'"{key}":{to_json(value)}' for key, value in data.items()) + '}'
   elif isinstance(data, list):
     return '[' + ','.join(to_json(item) for item in data) + ']'
   elif isinstance(data, str):

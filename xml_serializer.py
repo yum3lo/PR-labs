@@ -1,13 +1,11 @@
 def escape_xml_string(s):
-  """Escape special characters in a string for XML."""
   return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&apos;')
 
 # processed_data will be the root
 def to_xml(data, root_tag='root'):
-  """Convert data to XML string."""
   def _to_xml(data, tag):
     if isinstance(data, dict):
-      return f"<{tag}>" + ''.join(_to_xml(v, k) for k, v in data.items()) + f"</{tag}>"
+      return f"<{tag}>" + ''.join(_to_xml(value, key) for key, value in data.items()) + f"</{tag}>"
     elif isinstance(data, list):
       return f"<{tag}>" + ''.join(_to_xml(item, 'item') for item in data) + f"</{tag}>"
     elif isinstance(data, str):
