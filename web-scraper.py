@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 from functools import reduce
+from json_serializer import to_json
+from xml_serializer import to_xml
 
 url = 'https://999.md/ro/list/transport/cars'
 eur_to_mdl = 19.286
@@ -163,3 +165,11 @@ if html_content:
   print(f"Timestamp: {processed_data['timestamp']}")
 else:
   print(f'Failed to fetch page: {url}')
+
+if processed_data:
+  json_data = to_json(processed_data)
+  xml_data = to_xml(processed_data, 'processed_data')
+  print("\nJSON Data:")
+  print(json_data)
+  print("\nXML Data:")
+  print(xml_data)
