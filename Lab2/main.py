@@ -5,6 +5,9 @@ import json
 from database import get_db, Car
 from datetime import datetime
 from pydantic import BaseModel
+import asyncio
+import threading
+from websocket_server import start_websocket_server
 
 app = FastAPI()
 
@@ -36,7 +39,6 @@ def create_car(car: CarCreate, db: Session = Depends(get_db)):
   db.refresh(car)
   return car
 
-# with pagination
 @app.get('/cars', response_model=List[CarResponse])
 def read_cars(db: Session = Depends(get_db), limit: int = Query(default=10, ge=1), offset: int = Query(default=0, ge=0)):
   cars = db.query(Car).offset(offset).limit(limit).all()
@@ -70,7 +72,6 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
   db.commit()
   return {'message': 'Car deleted'}
 
-# file upload endpoint
 @app.post('/upload/')
 async def upload_file(file: UploadFile = File(...)):
   if file.content_type != 'application/json':
@@ -83,6 +84,12 @@ async def upload_file(file: UploadFile = File(...)):
   except json.JSONDecodeError:
     raise HTTPException(status_code=400, detail='Invalid JSON file')
 
-if __name__ == '__main__':
+def run_fastapi():
   import uvicorn
-  uvicorn.run(app, host='0.0.0.0', port=8001)
+  uvicorn.run(app, host="0.0.0.0", port=8001)
+
+if __name__ == '__main__':
+  http_thread = threading.Thread(target=run_fastapi)
+  http_thread.start()
+  
+  asyncio.run(start_websocket_server())
