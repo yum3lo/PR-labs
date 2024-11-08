@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yum3lo
+      - POSTGRES_DB=car_database
+    volumes: # data wont be lost
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # checks if the postgres is ready 
+      test: ["CMD-SHELL", "pg_isready -U postgres"] 
+      interval: 10s # docker runs the healthcheck every 10 sec
+      timeout: 5s # waits 5 sec if not - failed
+      retries: 5 # if failed 5 times - container is unhealthy
+
+  web:
+    build: .
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL = "postgresql://postgres:yum3lo@postgres:5432/car_database"
+
+volumes:
+  postgres_data:
