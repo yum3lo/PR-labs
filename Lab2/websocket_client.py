@@ -15,13 +15,14 @@ async def receive_messages(websocket):
 
 async def connect_to_chat():
   try:
-    async with websockets.connect('ws://localhost:8002') as websocket:
+    async with websockets.connect('ws://localhost:8003') as websocket:
       room_name = input("Enter room name to join: ")
       await websocket.send(json.dumps({
         "action": "join",
         "room": room_name
       }))
 
+      # listens for messages from the server
       receive_task = asyncio.create_task(receive_messages(websocket))
 
       print("\nStart chatting (type 'quit' to exit)")
@@ -52,5 +53,6 @@ async def connect_to_chat():
   except Exception as e:
     print(f"Connection error: {str(e)}")
 
+# starts the client
 if __name__ == "__main__":
   asyncio.run(connect_to_chat())

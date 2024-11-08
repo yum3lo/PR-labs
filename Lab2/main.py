@@ -7,7 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel
 import asyncio
 import threading
-from websocket_server import start_websocket_server
+from websocket_server import start_server
 
 app = FastAPI()
 
@@ -38,6 +38,10 @@ def create_car(car: CarCreate, db: Session = Depends(get_db)):
   db.commit()
   db.refresh(car)
   return car
+
+@app.get('/')
+def read_root():
+  return {'message': 'welcome to the car API'}
 
 @app.get('/cars', response_model=List[CarResponse])
 def read_cars(db: Session = Depends(get_db), limit: int = Query(default=10, ge=1), offset: int = Query(default=0, ge=0)):
@@ -89,7 +93,8 @@ def run_fastapi():
   uvicorn.run(app, host="0.0.0.0", port=8001)
 
 if __name__ == '__main__':
+  # new thread for the FastAPI server
   http_thread = threading.Thread(target=run_fastapi)
   http_thread.start()
   
-  asyncio.run(start_websocket_server())
+  asyncio.run(start_server())

@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import Set, Dict
 
 class ChatRoom:
+  # stores the clients for each room
   def __init__(self):
     self.clients: Dict[str, Set[websockets.WebSocketServerProtocol]] = defaultdict(set)
   
@@ -27,12 +28,13 @@ class ChatRoom:
           await client.send(json.dumps({"message": message}))
         except websockets.exceptions.ConnectionClosed:
           disconnected_clients.add(client)
-      
+    
       for client in disconnected_clients:
         self.clients[room].remove(client)
 
 chat_room = ChatRoom()
 
+# the main websocket handler for joining, sending, and leaving rooms
 async def handle_connection(websocket: websockets.WebSocketServerProtocol, path: str):
   try:
     async for message in websocket:
@@ -66,6 +68,7 @@ async def handle_connection(websocket: websockets.WebSocketServerProtocol, path:
       except json.JSONDecodeError:
         await websocket.send(json.dumps({"error": "Invalid JSON format"}))
   
+  # removes client from all rooms when connection is closed
   except websockets.exceptions.ConnectionClosed:
     for room, clients in chat_room.clients.items():
       if websocket in clients:
@@ -74,6 +77,7 @@ async def handle_connection(websocket: websockets.WebSocketServerProtocol, path:
 async def start_server():
   async with websockets.serve(handle_connection, "localhost", 8003) as server:
     print("WebSocket server is running on ws://localhost:8003")
+    # runs forever
     await asyncio.Future()
 
 def main():
