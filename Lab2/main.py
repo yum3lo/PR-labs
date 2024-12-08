@@ -31,7 +31,7 @@ class CarResponse(BaseModel):
   class Config:
     from_attributes = True
 
-@app.post('/cars', response_model=CarResponse)
+@app.post('/cars', response_model=CarResponse, status_code=200)
 def create_car(car: CarCreate, db: Session = Depends(get_db)):
   car = Car(**car.dict())
   db.add(car)

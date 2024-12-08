@@ -24,7 +24,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - DATABASE_URL = "postgresql://postgres:yum3lo@postgres:5432/car_database"
+      - DATABASE_URL=postgresql://postgres:yum3lo@postgres:5432/car_database
 
 volumes:
   postgres_data:

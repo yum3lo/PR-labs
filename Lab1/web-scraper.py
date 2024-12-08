@@ -1,3 +1,4 @@
+# web-scraper.py
 import socket
 import ssl
 from bs4 import BeautifulSoup
@@ -7,6 +8,8 @@ from functools import reduce
 from json_serializer import to_json
 from xml_serializer import to_xml
 from compact_serializer import CompactSerialize
+import pika 
+import json
 
 url = 'https://999.md/ro/list/transport/cars'
 eur_to_mdl = 19.286
@@ -75,7 +78,6 @@ def extract_additional_info(product_url):
   return None
 
 def validate_data(product):
-  # removing whitespaces from name and color (string fields)
   product['name'] = product['name'].strip() if product['name'] else None
   product['color'] = product['color'].strip() if product['color'] else None
 
@@ -89,10 +91,13 @@ def validate_data(product):
 
   if product['kilometrage']:
     # removing "km" string
-    product['kilometrage'] = re.sub(r'[^\d.]', '', product['kilometrage']).strip()
-    try:
-      product['kilometrage'] = int(product['kilometrage'])
-    except ValueError:
+    if product['kilometrage']:
+      product['kilometrage'] = re.sub(r'[^\d.]', '', product['kilometrage']).strip()
+      try:
+        product['kilometrage'] = int(product['kilometrage'])
+      except ValueError:
+        product['kilometrage'] = None
+    else:
       product['kilometrage'] = None
     
   return product
@@ -134,15 +139,38 @@ def process_products(products):
   products_mdl = list(map(lambda p: {**p, 'price_mdl': p['price'] * eur_to_mdl if p['price'] else None}, products))
   # filter products by price
   products_filtered = list(filter(lambda p: p['price'] and 5000<= p['price'] <= 10000, products_mdl))
+  for product in products_filtered:
+    # Ensure all required fields are not None
+    product['name'] = product.get('name', '').strip()
+    product['price_mdl'] = product.get('price_mdl', 0)
+    product['link'] = product.get('link', '')
+    product['kilometrage'] = product.get('kilometrage', 0)
+    product['color'] = (product.get('color') or '').strip()  
   # sum up the prices
-  total_price = reduce(lambda acc, p: acc + (p['price'] or 0), products_filtered, 0)
+  total_price = reduce(lambda acc, p: acc + (p['price_mdl'] or 0), products_filtered, 0)
   # final data structure
   result = {
     'products_filtered': products_filtered,
-    'total_price_mdl': total_price * eur_to_mdl,
+    'total_price_mdl': total_price,
     'timestamp': datetime.now().isoformat()
   }
   return result
+
+def publish_to_rabbitmq(data):
+  try:
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='car_data')
+    message = json.dumps(data, default=str)
+    channel.basic_publish(
+      exchange='', 
+      routing_key='car_data', 
+      body=message)
+    
+    print(f"Published message to RabbitMQ: {message}")
+    connection.close()
+  except Exception as e:
+    print(f"Error publishing to RabbitMQ: {e}")
 
 html_content = fetch_page_socket(url)
 
@@ -152,31 +180,37 @@ if html_content:
   products = extract_product_info(soup)
   # process the products
   processed_data = process_products(products)
-  print("Filtered products:")
-  for product in processed_data['products_filtered']:
-    print(f"Name: {product['name']}")
-    print(f"Price (MDL): {product['price_mdl']}")
-    print(f"Link: {product['link']}")
-    print(f"Kilometrage: {product['kilometrage']}")
-    print(f"Color: {product['color']}")
-    print('-----------------------------------')
-
-  print(f"Found {len(processed_data['products_filtered'])} products")
-  print(f"Total price (MDL): {processed_data['total_price_mdl']}")
-  print(f"Timestamp: {processed_data['timestamp']}")
+  
+  publish_to_rabbitmq(processed_data) 
+  print(f"Published data to RabbitMQ")
 else:
   print(f'Failed to fetch page: {url}')
+  
+#   print("Filtered products:")
+#   for product in processed_data['products_filtered']:
+#     print(f"Name: {product['name']}")
+#     print(f"Price (MDL): {product['price_mdl']}")
+#     print(f"Link: {product['link']}")
+#     print(f"Kilometrage: {product['kilometrage']}")
+#     print(f"Color: {product['color']}")
+#     print('-----------------------------------')
 
-if processed_data:
-  json_data = to_json(processed_data)
-  xml_data = to_xml(processed_data, 'processed_data')
-  print("\nJSON Data:")
-  print(json_data)
-  print("\nXML Data:")
-  print(xml_data)
-  compact_output = CompactSerialize.serialize(processed_data)
-  print("\nCompact Data:")
-  print(compact_output)
+#   print(f"Found {len(processed_data['products_filtered'])} products")
+#   print(f"Total price (MDL): {processed_data['total_price_mdl']}")
+#   print(f"Timestamp: {processed_data['timestamp']}")
+# else:
+#   print(f'Failed to fetch page: {url}')
 
-  deserialize_data = CompactSerialize.deserialize(compact_output)
-  print("\nDeserialized data mathes original:", processed_data == deserialize_data)
+# if processed_data:
+#   json_data = to_json(processed_data)
+#   xml_data = to_xml(processed_data, 'processed_data')
+#   print("\nJSON Data:")
+#   print(json_data)
+#   print("\nXML Data:")
+#   print(xml_data)
+#   compact_output = CompactSerialize.serialize(processed_data)
+#   print("\nCompact Data:")
+#   print(compact_output)
+
+#   deserialize_data = CompactSerialize.deserialize(compact_output)
+#   print("\nDeserialized data mathes original:", processed_data == deserialize_data)

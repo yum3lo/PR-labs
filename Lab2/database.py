@@ -31,3 +31,4 @@ def get_db():
     db.close()
 
 init_db()
+print(f"Connecting to database at: {DATABASE_URL}")
