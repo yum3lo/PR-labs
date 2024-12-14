@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Skoda Octavia",
+    "price": 350000,
+    "price_mdl": 173574,
+    "link": "https://999.md/34",
+    "kilometrage": 150000,
+    "color": "black"
+  },
+  {
+    "name": "Volkswagen Golf",
+    "price": 250000,
+    "price_mdl": 123450,
+    "link": "https://999.md/21",
+    "kilometrage": 100000,
+    "color": "blue"
+  },
+  {
+    "name": "Dacia Logan",
+    "price": 32000.0,
+    "color": "red",
+    "timestamp": "2024-11-08T11:58:41.645717"
+  },
+  {
+    "name": "Skoda ",
+    "price": 23348.0,
+    "color": "red",
+    "timestamp": "2024-11-08T13:39:20.667027"
+  }
+]

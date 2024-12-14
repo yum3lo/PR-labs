@@ -1,0 +1,126 @@
+{
+  "products_filtered": [
+    {
+      "name": "Mercedes C-Class, 2010 an",
+      "price": 9799.0,
+      "link": "https://999.md/ro/88224066",
+      "kilometrage": null,
+      "color": "",
+      "price_mdl": 188983.51400000002
+    },
+    {
+      "name": "Volkswagen Passat, 2010 an",
+      "price": 6000.0,
+      "link": "https://999.md/ro/89253988",
+      "kilometrage": 192000,
+      "color": "",
+      "price_mdl": 115716.00000000001
+    },
+    {
+      "name": "Renault Kangoo, 2014 an",
+      "price": 9290.0,
+      "link": "https://999.md/ro/89096270",
+      "kilometrage": null,
+      "color": "Argintiu",
+      "price_mdl": 179166.94
+    },
+    {
+      "name": "Ford Focus, 2016 an",
+      "price": 9240.0,
+      "link": "https://999.md/ro/86124524",
+      "kilometrage": null,
+      "color": "Gri",
+      "price_mdl": 178202.64
+    },
+    {
+      "name": "Toyota Prius, 2008 an",
+      "price": 6000.0,
+      "link": "https://999.md/ro/89270264",
+      "kilometrage": 231500,
+      "color": "Albastru \u00eenchis",
+      "price_mdl": 115716.00000000001
+    },
+    {
+      "name": "Citroen Jumpy, 2016 an",
+      "price": 8900.0,
+      "link": "https://999.md/ro/88774233",
+      "kilometrage": 190000,
+      "color": "Alb",
+      "price_mdl": 171645.40000000002
+    },
+    {
+      "name": "Volkswagen Caddy, 2017 an",
+      "price": 9800.0,
+      "link": "https://999.md/ro/89290247",
+      "kilometrage": 190000,
+      "color": "Alb",
+      "price_mdl": 189002.80000000002
+    },
+    {
+      "name": "Dacia Duster, 2018 an",
+      "price": 9900.0,
+      "link": "https://999.md/ro/88949846",
+      "kilometrage": 46300,
+      "color": "Negru",
+      "price_mdl": 190931.40000000002
+    },
+    {
+      "name": "Renault Megane, 2014 an",
+      "price": 5500.0,
+      "link": "https://999.md/ro/89294970",
+      "kilometrage": 165000,
+      "color": "Gri",
+      "price_mdl": 106073.00000000001
+    },
+    {
+      "name": "Renault Megane, 2017 an",
+      "price": 9900.0,
+      "link": "https://999.md/ro/89294965",
+      "kilometrage": 203700,
+      "color": "Gri",
+      "price_mdl": 190931.40000000002
+    },
+    {
+      "name": "Skoda Superb, 2009 an",
+      "price": 6900.0,
+      "link": "https://999.md/ro/89276587",
+      "kilometrage": 220000,
+      "color": "Albastru \u00eenchis",
+      "price_mdl": 133073.40000000002
+    },
+    {
+      "name": "Toyota Prius, 2010 an",
+      "price": 9999.0,
+      "link": "https://999.md/ro/85035147",
+      "kilometrage": null,
+      "color": "Negru",
+      "price_mdl": 192840.714
+    },
+    {
+      "name": "Toyota Auris, 2010 an",
+      "price": 6500.0,
+      "link": "https://999.md/ro/89294960",
+      "kilometrage": 230000,
+      "color": "",
+      "price_mdl": 125359.00000000001
+    },
+    {
+      "name": "Volkswagen Caddy, 2012 an",
+      "price": 7200.0,
+      "link": "https://999.md/ro/79587368",
+      "kilometrage": 225000,
+      "color": "Gri",
+      "price_mdl": 138859.2
+    },
+    {
+      "name": "Dacia Dokker, 2012 an",
+      "price": 6500.0,
+      "link": "https://999.md/ro/81138447",
+      "kilometrage": 140000,
+      "color": "Argintiu",
+      "price_mdl": 125359.00000000001
+    }
+  ],
+  "total_price_mdl": 2341860.408,
+  "timestamp": "2024-12-13T13:47:08.947638"
+}
