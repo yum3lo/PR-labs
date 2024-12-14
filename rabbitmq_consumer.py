@@ -1,3 +1,4 @@
+# rabbitmq_consumer.py
 import pika
 import requests
 import json
@@ -23,14 +24,14 @@ def callback(ch, method, properties, body):
       response = requests.post(url, json=car_payload, headers=headers)
       
       if response.status_code == 200:
-        print(f"Successfully posted car data: {response.json()}")
+        print(f"[x] Successfully posted car data: {response.json()}")
       else:
-        print(f"Failed to post car data, status code: {response.status_code}, response: {response.text}")
+        print(f"[x] Failed to post car data, status code: {response.status_code}, response: {response.text}")
   
   except json.JSONDecodeError:
     print(f"[x] Received invalid JSON")
   except Exception as e:
-    print(f"An error occurred: {e}")
+    print(f"[x] An error occurred: {e}")
         
 def start_consumer():
   connection = pika.BlockingConnection(

@@ -1,3 +1,4 @@
+# webserver.py
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -7,7 +8,9 @@ from datetime import datetime
 from pydantic import BaseModel
 import asyncio
 import threading
-from websocket_server import start_server
+import os
+from websocket.websocket_server import start_server
+from ftp_processor import start_ftp_processor
 
 app = FastAPI()
 
@@ -30,7 +33,7 @@ class CarResponse(BaseModel):
 
   class Config:
     from_attributes = True
-
+    
 @app.post('/cars', response_model=CarResponse, status_code=200)
 def create_car(car: CarCreate, db: Session = Depends(get_db)):
   car = Car(**car.dict())
@@ -78,23 +81,54 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
 
 @app.post('/upload/')
 async def upload_file(file: UploadFile = File(...)):
-  if file.content_type != 'application/json':
-    raise HTTPException(status_code=400, detail='Only JSON files are allowed')
-  content = await file.read()
   try:
-    data = json.loads(content)
-    print("Data:", data)
-    return{"message": "File uploaded successfully", "content": data}
-  except json.JSONDecodeError:
-    raise HTTPException(status_code=400, detail='Invalid JSON file')
+    if file.content_type != 'application/json':
+      raise HTTPException(status_code=400, detail='Only JSON files are allowed')
+    content = await file.read()
+    try:
+      data = json.loads(content)
+      print("Received data:", json.dumps(data, indent=2))
+      cars = data.get('products_filtered', [])
+      db = next(get_db())
+      for car in cars:
+        car = Car(
+          name=car_data.get('name', ''),
+          price_mdl=car_data.get('price_mdl', 0.0),
+          link=car_data.get('link', ''),
+          kilometrage=car_data.get('kilometrage', 0),
+          color=car_data.get('color', '')
+        )
+        db.add(car)
+      db.commit()
+      return{"message": "File uploaded successfully", "content": data}
+    except json.JSONDecodeError:
+      raise HTTPException(status_code=400, detail='Invalid JSON file')
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
 
-def run_fastapi():
+WEB_SERVER_NODES = [
+  ('localhost', 8001),  # First server
+  ('localhost', 8002),  # Second server
+  ('localhost', 8003)   # Third server
+]
+
+def run_fastapi(host, port):
   import uvicorn
-  uvicorn.run(app, host="0.0.0.0", port=8001)
+  uvicorn.run(app, host=host, port=port)
+
+async def main():
+  current_host = 'localhost'
+  current_port = 8001
+  
+  ftp_thread = start_ftp_processor()
+  http_thread = threading.Thread(
+    target=run_fastapi,
+    args=(current_host, current_port),
+    daemon=True
+  )
+  http_thread.start()
+  websocket_task = asyncio.create_task(start_server())
+  await websocket_task
 
 if __name__ == '__main__':
-  # new thread for the FastAPI server
-  http_thread = threading.Thread(target=run_fastapi)
-  http_thread.start()
-  
-  asyncio.run(start_server())
+  asyncio.run(main())

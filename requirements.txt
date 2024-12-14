@@ -5,3 +5,4 @@ python-multipart==0.0.6
 pydantic==2.4.2
 websockets
 psycopg2-binary
+requests==2.31.0

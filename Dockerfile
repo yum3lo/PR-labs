@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy the current directory contents into the container at /app
 COPY . .
 
-CMD ["python", "main.py"]
+CMD ["python", "webserver.py"]

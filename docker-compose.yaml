@@ -1,4 +1,24 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  ftp_server:
+    image: stilliard/pure-ftpd:hardened
+    container_name: ftp_server
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009"
+    environment:
+      FTP_USER_NAME: testuser
+      FTP_USER_PASS: testpass
+      FTP_USER_HOME: /home/testuser
+    volumes:
+      - ./ftp_data:/home/testuser
+
   postgres:
     image: postgres:latest
     ports:
@@ -16,7 +36,7 @@ services:
       timeout: 5s # waits 5 sec if not - failed
       retries: 5 # if failed 5 times - container is unhealthy
 
-  web:
+  webserver:
     build: .
     ports:
       - "8001:8001"
